@@ -81,7 +81,6 @@
 {
     GKTurnBasedMatch *currentMatch = [[GCTurnBasedMatchHelper sharedInstance] currentMatch];
     NSString *newStoryString;
-    
     if ([textInputField.text length] > 250) 
     {
         newStoryString = [textInputField.text substringToIndex:249];
@@ -92,44 +91,71 @@
     }
     
     NSString *sendString = [NSString stringWithFormat:@"%@ %@", mainTextController.text, newStoryString];
-    NSData *data = [sendString dataUsingEncoding:NSUTF8StringEncoding ];
     
+    NSData *data = [sendString dataUsingEncoding:NSUTF8StringEncoding ];
+   
     mainTextController.text = sendString;
     
     NSUInteger currentIndex = [currentMatch.participants indexOfObject:currentMatch.currentParticipant];
     GKTurnBasedParticipant *nextParticipant;
     
     NSUInteger nextIndex = (currentIndex + 1) % [currentMatch.participants count];
-    
     nextParticipant = [currentMatch.participants objectAtIndex:nextIndex];
     
     for (int i = 0; i < [currentMatch.participants count]; i++) 
     {
         nextParticipant = [currentMatch.participants objectAtIndex:((currentIndex + 1 + i) % [currentMatch.participants count ])];
-        
-        if (nextParticipant.matchOutcome != 
-            GKTurnBasedMatchOutcomeQuit) {
+        if (nextParticipant.matchOutcome != GKTurnBasedMatchOutcomeQuit) 
+        {
+            NSLog(@"isnt' quit %@", nextParticipant);
             break;
         } 
+        else 
+        {
+            NSLog(@"nex part %@", nextParticipant);
+        }
     }
     
-    [currentMatch endTurnWithNextParticipant:nextParticipant matchData:data completionHandler:^(NSError *error) 
-     {
-         if (error) 
+    if ([data length] > 3800) 
+    {
+        for (GKTurnBasedParticipant *part in currentMatch.participants) 
+        {
+            part.matchOutcome = GKTurnBasedMatchOutcomeTied;
+        }
+        
+        [currentMatch endMatchInTurnWithMatchData:data completionHandler:^(NSError *error) 
          {
-            NSLog(@"%@", error);
-            statusLabel.text = @"Oops, there was a problem.  Try that again.";
-         } 
-         else 
-         {
-            statusLabel.text = @"Your turn is over.";
-            textInputField.enabled = NO;
-         }
-     }];
+                                    if (error) 
+                                    {
+                                        NSLog(@"%@", error);
+                                    }
+         }];
+        statusLabel.text = @"Game has ended";
+        
+    } 
+    else 
+    {
+        [currentMatch endTurnWithNextParticipant:nextParticipant matchData:data completionHandler:^(NSError *error) 
+                {
+                                           if (error) 
+                                           {
+                                               NSLog(@"%@", error);
+                                               statusLabel.text = 
+                                               @"Oops, there was a problem.  Try that again.";
+                                           } 
+                                           else 
+                                           {
+                                               statusLabel.text = @"Your turn is over.";
+                                               textInputField.enabled = NO;
+                                           }
+                }];
+    }
     
     NSLog(@"Send Turn, %@, %@", data, nextParticipant);
+    
     textInputField.text = @"";
     characterCountLabel.text = @"250";
+    characterCountLabel.textColor = [UIColor blackColor];
 }
 
 - (void) animateTextField: (UITextField*) textField up: (BOOL) up
@@ -184,6 +210,8 @@
                                 [match.matchData bytes]];
         mainTextController.text = storySoFar;
     }
+    
+    [self checkForEnding:match.matchData];
 }
 
 
@@ -204,6 +232,8 @@
     NSString *storySoFar = [NSString stringWithUTF8String:
                             [match.matchData bytes]];
     mainTextController.text = storySoFar;
+    
+    [self checkForEnding:match.matchData];
 }
 
 - (void)viewWillAppear:(BOOL)animated
@@ -238,6 +268,11 @@
                             @"%@, only about %d letter left", statusLabel.text, 
                             4000 - [matchData length]];
     }
+}
+
+-(void)recieveEndGame:(GKTurnBasedMatch *)match 
+{
+    [self layoutMatch:match];
 }
 
 - (void)dealloc {
