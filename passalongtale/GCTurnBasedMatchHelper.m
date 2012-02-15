@@ -252,9 +252,12 @@ static GCTurnBasedMatchHelper *sharedHelper = nil;
     [av release];
 }
 
--(void)handleMatchEnded:(GKTurnBasedMatch *)match 
-{
+-(void)handleMatchEnded:(GKTurnBasedMatch *)match {
     NSLog(@"Game has ended");
+    if ([match.matchID isEqualToString:currentMatch.matchID]) {
+        [delegate recieveEndGame:match];
+    } else {
+        [delegate sendNotice:@"Another Game Ended!" forMatch:match];
+    }
 }
-
 @end
