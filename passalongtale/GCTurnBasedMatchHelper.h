@@ -18,8 +18,8 @@
           forMatch:(GKTurnBasedMatch *)match;
 @end
 
-@interface GCTurnBasedMatchHelper : NSObject 
-<GKTurnBasedMatchmakerViewControllerDelegate> {
+@interface GCTurnBasedMatchHelper : NSObject <GKTurnBasedMatchmakerViewControllerDelegate, GKTurnBasedEventHandlerDelegate> 
+{
     BOOL gameCenterAvailable;
     BOOL userAuthenticated;
     UIViewController *presentingViewController;

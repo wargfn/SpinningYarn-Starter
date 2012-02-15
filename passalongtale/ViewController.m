@@ -232,6 +232,14 @@
     return (interfaceOrientation != UIInterfaceOrientationPortraitUpsideDown);
 }
 
+-(void)checkForEnding:(NSData *)matchData {
+    if ([matchData length] > 3000) {
+        statusLabel.text = [NSString stringWithFormat:
+                            @"%@, only about %d letter left", statusLabel.text, 
+                            4000 - [matchData length]];
+    }
+}
+
 - (void)dealloc {
    
     [mainTextController release];
@@ -241,4 +249,5 @@
     [statusLabel release];
     [super dealloc];
 }
+
 @end
